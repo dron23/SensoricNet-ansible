@@ -32,10 +32,10 @@
    - GeoIP-update
 
 - name: nastavim date.timezone
-  lineinfile: dest=/etc/php.ini regexp='^;date.timezone =$' line='date.timezone = Europe/Prague'
+  lineinfile: dest=/etc/php.ini regexp='^;date.timezone =$' line='date.timezone = Europe/Prague' backrefs=yes
 
 - name: nastavim error reporting
-  lineinfile: dest=/etc/php.ini regexp='^error_reporting =' line='error_reporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED'
+  lineinfile: dest=/etc/php.ini regexp='^error_reporting =' line='error_reporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED' backrefs=yes
 
 - name: nastavim cgi.fix_pathinfo
   lineinfile: dest=/etc/php.ini line='cgi.fix_pathinfo=1'
