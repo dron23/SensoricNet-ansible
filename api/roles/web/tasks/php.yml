@@ -28,6 +28,7 @@
    - php70u-ldap
    - php70u-pecl-geoip
    - php70u-fpm-httpd
+   - composer
    - GeoIP-data
    - GeoIP-update
 
