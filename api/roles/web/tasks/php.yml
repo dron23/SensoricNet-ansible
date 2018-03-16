@@ -1,0 +1,51 @@
+---
+
+- name: install remi repo
+  yum: name=http://rpms.famillecollet.com/enterprise/remi-release-7.rpm state=present
+
+# php7.0 kvuli kompatibilite s phpmyadminem z epelu https://ius.io/FAQs/#im-trying-to-install-phpmyadmin-but-yum-is-failing-with-errors-from-ius-packages-why
+
+- name: Install php 7.0 from remi-safe repo
+  yum: name={{ item }} state=installed
+  with_items:
+   - phpMyAdmin
+   - php70u-bcmath
+   - php70u-cli
+   - php70u-tidy
+   - php70u-common
+   - php70u-fpm
+   - php70u-gd
+   - php70u-intl
+   - php70u-json
+   - php70u-mbstring
+   - php70u-mcrypt
+   - php70u-mysqlnd
+   - php70u-opcache
+   - php70u-pdo
+   - php70u-soap
+   - php70u-xml
+   - php70u-xmlrpc
+   - php70u-ldap
+   - php70u-pecl-geoip
+   - php70u-fpm-httpd
+   - GeoIP-data
+   - GeoIP-update
+
+- name: nastavim date.timezone
+  lineinfile: dest=/etc/php.ini regexp='^;date.timezone =$' line='date.timezone = Europe/Prague'
+
+- name: nastavim error reporting
+  lineinfile: dest=/etc/php.ini regexp='^error_reporting =' line='error_reporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED'
+
+- name: nastavim cgi.fix_pathinfo
+  lineinfile: dest=/etc/php.ini line='cgi.fix_pathinfo=1'
+
+- name: Uprava konfigu phpMyAdmin.conf
+  template: src=phpMyAdmin.conf.j2 dest=/etc/httpd/conf.d/phpMyAdmin.conf owner=root group=root mode=0644
+  tags: httpd
+
+- name: restart apache service
+  service: name=httpd state=restarted
+
+- name: start php-fpm service
+  service: name=php-fpm state=started enabled=yes

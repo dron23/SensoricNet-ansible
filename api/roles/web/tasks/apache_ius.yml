@@ -1,0 +1,123 @@
+---
+
+- include_vars:
+    file: ./private/private_vars.yml
+
+
+
+- name: install IUS repo
+  yum: name=https://centos7.iuscommunity.org/ius-release.rpm state=present
+  ignore_errors: yes
+
+- name: Install Apache package from ius repo
+  yum: name={{ item }} state=installed
+  with_items:
+   - httpd24u
+   - httpd24u-mod_ssl
+   - httpd24u-mod_session
+   - mod_fcgid
+   - mod_geoip
+   - httpd24u-mod_xsendfile
+   - curl
+   - curl-devel
+   - httpd24u-devel
+   - httpd24u-mod_security2
+  tags: httpd
+
+
+- name: Copy SSL certificate data
+  copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  when: ssl_certs_local_privkey_data != ''
+        and ssl_certs_local_cert_data != ''
+        and ssl_certs_local_ca_data != ''
+  with_items:
+    - { content: "{{ ssl_certs_local_privkey_data|default }}", dest: "{{ ssl_certs_privkey_path }}", mode: "0600" }
+    - { content: "{{ ssl_certs_local_cert_data|default }}", dest: "{{ ssl_certs_cert_path }}", mode: "0644" }
+    - { content: "{{ ssl_certs_local_ca_data|default }}", dest: "{{ ssl_certs_ca_path }}", mode: "0644" }
+  no_log: true
+
+- name: "RHEL/Centos | Creating /etc/httpd/modsecurity.d/owasp-modsecurity-crs directory for OWASP Core Rule Set"
+  file: path=/etc/httpd/modsecurity.d/owasp-modsecurity-crs state=directory
+
+- name: "RHEL/Centos | Creating log directory for mod security"
+  file: path=/var/log/modsecurity/ state=directory owner=apache group=root mode=755
+
+- name: "RHEL/Centos | Creating log directory for mod security audit"
+  file: path=/var/log/modsecurity/audit state=directory owner=apache group=root mode=755
+
+
+- name: "RHEL/Centos | Downloading latest OWASP Core Rule Set"
+  git:
+    repo: https://github.com/SpiderLabs/owasp-modsecurity-crs.git
+    dest: /etc/httpd/modsecurity.d/owasp-modsecurity-crs
+    version: v3.0/master
+
+
+- name: "RHEL/Centos | Stat conf file"
+  stat: path=/etc/httpd/modsecurity.d/owasp-modsecurity-crs/crs-setup.conf
+  register: crs_setup
+
+- name: "RHEL/Centos | Create crs-setup.conf file from example"
+  copy: remote_src=True src=/etc/httpd/modsecurity.d/owasp-modsecurity-crs/crs-setup.conf.example dest=/etc/httpd/modsecurity.d/owasp-modsecurity-crs/crs-setup.conf
+  when: crs_setup.stat.exists == False
+  notify: restart apache
+
+
+- name: test existence prvniho pravidla
+  stat: path=/etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+  register: rule900_stat
+
+- name: vytvoreni prvniho pravidla
+  command: cp /etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example /etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+  when: rule900_stat.stat.exists == False
+  notify: restart apache
+
+- name: test existence posledniho pravidla
+  stat: path=/etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+  register: rule999_stat
+
+- name: vytvoreni posledniho pravidla
+  command: cp /etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example /etc/httpd/modsecurity.d/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+  when: rule999_stat.stat.exists == False
+  notify: restart apache
+
+- name: mod_security2.conf
+  template: src=mod_security2.conf.j2 dest=/etc/httpd/conf.d/mod_security2.conf owner=root group=root mode=0644 backup=yes
+  notify: restart apache
+
+- name: vytvor bin adresar pro roota
+  file: path=/root/bin state=directory owner=root group=root mode=755
+
+- name: shell script clean_modsecurity_audit_files.sh
+  template: src=clean_modsecurity_audit_files.sh.j2 dest=/root/bin/clean_modsecurity_audit_files.sh owner=root group=root mode=0744
+  tags: httpd
+
+- name: vytvor crontab pro script clean_modsecurity_audit_files.sh
+  cron:
+    name: "script pro vycisteni modsecurity audit logu"
+    minute: "10"
+    hour: "1"
+    job: "/root/bin/clean_modsecurity_audit_files.sh >/dev/null 2>&1"
+  tags: httpd
+
+- name: httpd.conf
+  template: src=httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf owner=root group=root mode=0644 backup=yes
+  notify: restart apache
+
+- name: insert firewalld rule for httpd
+  firewalld: port=80/tcp permanent=true state=enabled immediate=yes
+  tags: httpd, firewall
+
+- name: insert firewalld rule for httpd
+  firewalld: port=443/tcp permanent=true state=enabled immediate=yes
+  tags: httpd, firewall
+
+- name: Start Apache Service
+  service: name=httpd state=started enabled=yes
+  tags: httpd
+

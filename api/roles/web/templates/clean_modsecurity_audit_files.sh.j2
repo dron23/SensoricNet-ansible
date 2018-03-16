@@ -1,0 +1,5 @@
+#!/bin/bash
+
+MODSEC_FILES="/var/log/modsecurity/audit/"
+
+find ${MODSEC_FILES} -type d -mtime +30 -exec rm -rfv '{}' \;

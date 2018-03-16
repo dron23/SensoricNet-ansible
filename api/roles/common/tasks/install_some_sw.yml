@@ -1,0 +1,42 @@
+---
+# nainstaluj nejaky zakladni sw
+
+- name: upgrade all packages
+  yum: name=* state=latest exclude=rdma-core.i686
+  tags: packages
+
+- name: nainstalujeme epel
+  yum: name=epel-release state=present
+  tags: packages
+
+- name: nainstalujeme zakladni sw
+  yum: name={{ item }} state=present
+  with_items:
+   - man
+   - acpid
+   - wget
+   - nano
+   - htop
+   - lnav
+   - iftop
+   - bzip2
+   - unzip
+   - zip
+   - nmap
+   - openssl
+   - elinks
+   - fileutils
+   - rsync
+   - mc
+   - chrony
+   - net-tools
+   - MySQL-python
+   - libselinux-python
+   - perl-TimeDate
+   - rkhunter
+   - jwhois
+   - git
+   - openldap-clients
+   - vim
+  tags: packages
+

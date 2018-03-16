@@ -1,0 +1,25 @@
+---
+
+- include_vars:
+    file: ./private/private_vars.yml
+
+- name: clone SensoricNet-udp z githubu
+  git:
+    repo: https://github.com/dron23/SensoricNet-udp.git
+    dest: /root/git/SensoricNet-udp
+  tags: api
+
+- name: clone SensoricNet-api z githubu
+  git:
+    repo: https://github.com/dron23/SensoricNet-api.git
+    dest: /root/git/SensoricNet-api
+  tags: api
+
+- name: insert firewalld rule for nbiot udp reception
+  firewalld: port=9999/udp permanent=true state=enabled immediate=yes
+  tags: api
+
+
+#TODO...
+
+

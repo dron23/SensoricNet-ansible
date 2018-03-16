@@ -1,0 +1,43 @@
+---
+
+- name: Install percona-xtrabackup packages
+  yum: name={{ item }} state=installed
+  with_items:
+   - percona-xtrabackup
+   - holland-xtrabackup
+   - pigz
+  tags: db backup
+
+- name: upravim soft limits pro roota (default 4096 nestaci...)
+  lineinfile: dest=/etc/security/limits.conf regexp='^root[ \t]*soft[ \t]*nofile.*$' line='root             soft    nofile          90000'
+  tags: db backup
+
+- name: upravim hard limits pro roota (default 4096 nestaci...)
+  lineinfile: dest=/etc/security/limits.conf regexp='^root[ \t]*hard[ \t]*nofile.*$' line='root             hard    nofile          90000'
+  tags: db backup
+
+- name: Vytvor adresar pro zalohy
+  file: path=/var/backup/holland state=directory
+  tags: db backup
+
+- name: holland.conf
+  template: src=holland.conf.j2 dest=/etc/holland/holland.conf owner=root group=root mode=0640
+  tags: db backup
+
+- name: backupsets/xtrabackup.conf
+  template: src=backupsets_xtrabackup.conf.j2 dest=/etc/holland/backupsets/xtrabackup.conf owner=root group=root mode=0640
+  tags: db backup
+
+- name: providers/xtrabackup.conf
+  template: src=providers_xtrabackup.conf.j2 dest=/etc/holland/providers/xtrabackup.conf owner=root group=root mode=0640
+  tags: db backup
+
+- name: vytvor crontab
+  cron:
+    name: "holland backup"
+    minute: "10"
+    hour: "2"
+    job: "/usr/sbin/holland -d backup xtrabackup"
+  tags: db backup
+
+

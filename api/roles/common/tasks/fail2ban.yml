@@ -1,0 +1,16 @@
+---
+
+- name: Install fail2ban
+  yum: name={{ item }} state=installed
+  with_items:
+   - fail2ban
+   - fail2ban-systemd
+  tags: fail2ban
+
+- name: Upravim config fail2ban
+  template: src=jail.local.j2 dest=/etc/fail2ban/jail.local owner=root group=root mode=0644
+  tags: fail2ban
+
+- name: Start fail2ban Service
+  service: name=fail2ban state=started enabled=yes
+  tags: fail2ban

@@ -1,0 +1,160 @@
+#
+# Ansible managed
+#
+
+ServerRoot "/etc/httpd"
+
+#Listen 12.34.56.78:80
+Listen 80
+
+Include conf.modules.d/*.conf
+
+User apache
+Group apache
+
+# 'Main' server configuration
+
+ServerAdmin root@localhost
+#ServerName www.example.com:80
+
+<Directory />
+    AllowOverride none
+    Require all denied
+</Directory>
+
+DocumentRoot "/var/www/html"
+
+#
+# Relax access to content within /var/www.
+#
+<Directory "/var/www">
+    AllowOverride None
+    # Allow open access:
+    Require all granted
+</Directory>
+
+# Further relax access to the default document root:
+<Directory "/var/www/html">
+
+    # Possible values for the Options directive are "None", "All",
+    # or any combination of:
+    #   Indexes Includes FollowSymLinks SymLinksifOwnerMatch ExecCGI MultiViews
+
+    Options Indexes FollowSymLinks
+
+    AllowOverride None
+
+    # Controls who can get stuff from this server.
+
+    # zachrana brzda, pokud utok probiha z nejake zeme
+    GeoIPEnable On
+    SetEnvIf GEOIP_COUNTRY_CODE NG DisableCountry
+
+    <RequireAll>
+      Require all granted
+      Require not env DisableCountry
+    </RequireAll>
+
+</Directory>
+
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+
+<Files ".ht*">
+    Require all denied
+</Files>
+
+ErrorLog "logs/error_log"
+LogLevel warn
+
+<IfModule log_config_module>
+    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+    LogFormat "%h %l %u %t \"%r\" %>s %b" common
+
+    <IfModule logio_module>
+      # You need to enable mod_logio.c to use %I and %O
+      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+    </IfModule>
+
+    CustomLog "logs/access_log" combined
+</IfModule>
+
+<IfModule alias_module>
+    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+</IfModule>
+
+<Directory "/var/www/cgi-bin">
+    AllowOverride None
+    Options None
+    Require all granted
+</Directory>
+
+<IfModule mime_module>
+    TypesConfig /etc/mime.types
+
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+
+    AddType text/html .shtml
+    AddOutputFilter INCLUDES .shtml
+</IfModule>
+
+# defaukt charset nechame na prohlizeci...
+#AddDefaultCharset UTF-8
+
+<IfModule mime_magic_module>
+    MIMEMagicFile conf/magic
+</IfModule>
+
+# Customizable error responses come in three flavors:
+# 1) plain text 2) local redirects 3) external redirects
+#
+# Some examples:
+#ErrorDocument 500 "The server made a boo boo."
+#ErrorDocument 404 /missing.html
+#ErrorDocument 404 "/cgi-bin/missing_handler.pl"
+#ErrorDocument 402 http://www.example.com/subscription_info.html
+#
+
+#EnableMMAP off
+EnableSendfile on
+
+IncludeOptional conf.d/*.conf
+
+
+######################################
+### {{ ansible_nodename }}
+######################################
+
+<VirtualHost {{ ansible_default_ipv4.address }}:80 [{{ ansible_default_ipv6.address }}]:80>
+  ServerName {{ ansible_nodename }}
+  ServerAdmin webmaster@slu.cz
+  DocumentRoot /var/www/html
+  ErrorLog logs/{{ ansible_nodename }}.error.log
+  TransferLog logs/{{ ansible_nodename }}.access.log
+
+  RewriteEngine on
+  RewriteCond %{SERVER_PORT} =80
+  RewriteRule ^(.*) https://%{SERVER_NAME}%{REQUEST_URI}
+
+</VirtualHost>
+
+#######################################
+### {{ ansible_nodename }}
+#######################################
+
+<VirtualHost {{ ansible_default_ipv4.address }}:443 [{{ ansible_default_ipv6.address }}]:443>
+  ServerName {{ ansible_nodename }}
+  ServerAdmin webmaster@slu.cz
+  DocumentRoot /var/www/html
+  ErrorLog logs/{{ ansible_nodename }}.error.log
+  TransferLog logs/{{ ansible_nodename }}.access.log
+
+  SSLEngine on
+  SSLCertificateChainFile {{ ssl_certs_ca_path }}
+  SSLCertificateKeyFile   {{ ssl_certs_privkey_path }}
+  SSLCertificateFile      {{ ssl_certs_cert_path }}
+
+</VirtualHost>
+

@@ -1,0 +1,25 @@
+---
+# nainstaluj ovirt agenty
+
+- name: nainstalujeme epel
+  yum: name=epel-release state=present
+  tags: packages
+
+- name: nainstalujeme zakladni sw
+  yum: name={{ item }} state=present
+  with_items:
+   - qemu-guest-agent
+   - ovirt-guest-agent-common
+  when: (ansible_virtualization_role == "guest") and (ansible_virtualization_type == "RHEV" or ansible_virtualization_type == "kvm")
+  tags: packages ovirt
+
+- name: Start the ovirt-guest-agent service
+  service: name=ovirt-guest-agent state=started enabled=yes
+  when: (ansible_virtualization_role == "guest") and (ansible_virtualization_type == "RHEV" or ansible_virtualization_type == "kvm")
+  tags: ovirt
+
+- name: Start the qemu-guest-agent service
+  service: name=qemu-guest-agent state=started enabled=yes
+  when: (ansible_virtualization_role == "guest") and (ansible_virtualization_type == "RHEV" or ansible_virtualization_type == "kvm")
+  tags: ovirt 
+

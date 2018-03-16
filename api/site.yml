@@ -1,0 +1,11 @@
+---
+# This playbook deploys SensoricNet api stack
+
+- name: SensoricNet api instalation
+  hosts: sn_api
+  remote_user: root
+  roles:
+    - common
+    - db
+    - web
+    - api-deploy

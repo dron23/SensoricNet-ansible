@@ -1,0 +1,71 @@
+#
+# These groups are read by MariaDB server.
+# Use it for options that only the server (but not clients) should see
+#
+# custom konfigurace pro mchosting
+
+[server]
+
+[mysqld]
+
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+
+thread_cache_size        = 16
+
+key_buffer               = 150M
+
+max_connections          = 300
+max_connect_errors       = 10000
+
+query_cache_type         = 1
+query_cache_min_res_unit = 2K
+query_cache_limit        = 512K
+query_cache_size         = 32M
+
+tmp_table_size           = 32M
+max_heap_table_size      = 32M
+
+innodb_buffer_pool_instances    = 1
+innodb_buffer_pool_size         = 256M
+innodb_additional_mem_pool_size = 8M
+innodb_log_buffer_size          = 16M
+innodb_thread_concurrency       = 4
+
+# z tuneru
+#query_cache_limit (> 256K, or use smaller result sets)
+#key_buffer_size (> 168.5M)
+#innodb_buffer_pool_size (>= 98M) if possible.
+#innodb_buffer_pool_instances (=1)
+
+
+
+[galera]
+
+# Mandatory settings
+#wsrep_on=ON
+#wsrep_provider=
+#wsrep_cluster_address=
+#binlog_format=row
+#default_storage_engine=InnoDB
+#innodb_autoinc_lock_mode=2
+#
+# Allow server to accept connections on all interfaces.
+#
+#bind-address=0.0.0.0
+#
+# Optional setting
+#wsrep_slave_threads=1
+#innodb_flush_log_at_trx_commit=0
+
+[embedded]
+
+[mariadb]
+
+[mariadb-10.1]
+
+

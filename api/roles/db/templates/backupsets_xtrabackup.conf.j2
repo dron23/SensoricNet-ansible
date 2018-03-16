@@ -1,0 +1,24 @@
+[holland:backup]
+plugin = xtrabackup
+backups-to-keep = 5
+auto-purge-failures = yes
+purge-policy = after-backup
+estimated-size-factor = 0.5
+
+[xtrabackup]
+innobackupex = innobackupex
+stream = yes
+slave-info = no
+
+[compression]
+method = pigz
+inline = yes
+level = 1
+
+[mysql:client]
+defaults-extra-file = ~/.my.cnf
+# user = ""
+# password = ""
+# host = ""
+# port = ""
+# socket = ""

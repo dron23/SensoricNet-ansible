@@ -1,0 +1,9 @@
+---
+# This playbook will install MariaDB
+
+
+- include_vars:
+    file: ./private/private_vars.yml
+
+- include_tasks: mariadb10_ius.yml
+- include_tasks: percona_backup.yml

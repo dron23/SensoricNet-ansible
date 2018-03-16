@@ -1,0 +1,75 @@
+---
+
+- name: install IUS repo
+  yum: name=https://centos7.iuscommunity.org/ius-release.rpm state=present
+  ignore_errors: yes
+
+- name: Install yum plugin replace
+  yum: name=yum-plugin-replace state=installed
+  tags: db
+
+- name: nastav replace mariadb za IUS verzi
+  command: yum replace mariadb-libs --replace-with=mariadb101u-libs -y
+  ignore_errors: yes
+  tags: db
+
+- name: Install MariaDB10 package from ius repo
+  yum: name={{ item }} state=installed
+  with_items:
+   - mariadb101u
+   - mariadb101u-server
+   - mysqltuner
+  tags: db
+
+- name: Vytvor adresar pro limits mariadb v systemd
+  file: path=/etc/systemd/system/mariadb.service.d state=directory
+
+- name: Uprava limits pro mariadb v systemd
+  template: src=mariadb_systemd_limits.j2 dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=0644
+  notify:
+  - systemd reload
+  tags: db
+
+- name: Uprava konfigu mariadb-server.cnf
+  template: src=mariadb-server.cnf.j2 dest=/etc/my.cnf.d/mariadb-server.cnf owner=root group=root mode=0644
+  notify:
+  - restart mariadb
+  tags: db
+
+- name: Start MariaDB10 Service
+  service: name=mariadb state=started enabled=yes
+  tags: db
+
+- stat: path=/root/.my.cnf
+  register: mysql_root_passwd_set
+  tags: db
+
+- debug: msg="MySQL root password is probably set"
+  when: mysql_root_passwd_set.stat.exists == True
+  tags: db
+
+- name: update mysql root passwd
+  mysql_user: name=root host={{ item }} password="{{ mysql_root_pw }}"
+  with_items:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+  when: mysql_root_passwd_set.stat.exists == False
+  tags: db
+
+- name: copy user my.cnf file with root passwd credentials
+  template: src=root_my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
+  when: mysql_root_passwd_set.stat.exists == False
+  tags: db
+
+- name: delete anonymous mysql user
+  mysql_user: name='' host_all=yes state=absent
+  ignore_errors: yes
+  tags: db
+
+- name: remove mysql test database
+  mysql_db: name=test state=absent
+  ignore_errors: yes
+  tags: db
+
