@@ -2,6 +2,8 @@
 
 - name: install remi repo
   yum: name=http://rpms.famillecollet.com/enterprise/remi-release-7.rpm state=present
+  tags:
+    - php
 
 # php7.0 kvuli kompatibilite s phpmyadminem z epelu https://ius.io/FAQs/#im-trying-to-install-phpmyadmin-but-yum-is-failing-with-errors-from-ius-packages-why
 
@@ -31,22 +33,45 @@
    - composer
    - GeoIP-data
    - GeoIP-update
+   - php70u-pear
+   - php70u-devel
+   - mosquitto-devel
+   - gcc
+  tags:
+    - php
 
 - name: nastavim date.timezone
   lineinfile: dest=/etc/php.ini regexp='^;date.timezone =$' line='date.timezone = Europe/Prague' backrefs=yes
+  tags: php
 
 - name: nastavim error reporting
   lineinfile: dest=/etc/php.ini regexp='^error_reporting =' line='error_reporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED' backrefs=yes
+  tags: php
 
 - name: nastavim cgi.fix_pathinfo
   lineinfile: dest=/etc/php.ini line='cgi.fix_pathinfo=1'
+  tags: php
 
 - name: Uprava konfigu phpMyAdmin.conf
   template: src=phpMyAdmin.conf.j2 dest=/etc/httpd/conf.d/phpMyAdmin.conf owner=root group=root mode=0644
-  tags: httpd
+  tags:
+    - httpd
+    - php
+
+- name: Instalace mosquitto modulu
+  shell: pecl install "channel://pecl.php.net/Mosquitto-0.4.0"
+  ignore_errors: yes
+  tags: php
+
+- name: mosquitto ini soubor
+  template: src=20-mosquitto.ini.j2 dest=/etc/php.d/20-mosquitto.ini owner=root group=root mode=0644
+  tags:
+    - php
 
 - name: restart apache service
   service: name=httpd state=restarted
+  tags: php
 
 - name: start php-fpm service
   service: name=php-fpm state=started enabled=yes
+  tags: php
