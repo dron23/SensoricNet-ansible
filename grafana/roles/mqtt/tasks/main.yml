@@ -1,0 +1,19 @@
+---
+
+
+- name: Install MariaDB10 package from ius repo
+  yum: name={{ item }} state=installed
+  with_items:
+   - mariadb101u
+   - mariadb101u-server
+   - mysqltuner
+  tags: db
+
+#- name: Vytvor adresar pro limits mariadb v systemd
+#  file: path=/etc/systemd/system/mariadb.service.d state=directory
+
+#- name: Uprava limits pro mariadb v systemd
+#  template: src=mariadb_systemd_limits.j2 dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=0644
+#  notify:
+#  - systemd reload
+#  tags: db

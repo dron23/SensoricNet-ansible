@@ -1,0 +1,10 @@
+---
+# This playbook deploys SensoricNet grafana stack
+
+- name: SensoricNet grafana instalation
+  hosts: sn_grafana
+  remote_user: root
+  roles:
+    - common
+    - mqtt
+    - grafana

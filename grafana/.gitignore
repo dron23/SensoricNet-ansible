@@ -1,0 +1,5 @@
+private/*
+!private/.gitkeep
+!private/private_vars.example.yml
+site.retry
+
