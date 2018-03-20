@@ -1,19 +1,28 @@
 ---
 
 
-- name: Install MariaDB10 package from ius repo
+- name: Install mosquitto
   yum: name={{ item }} state=installed
   with_items:
-   - mariadb101u
-   - mariadb101u-server
-   - mysqltuner
-  tags: db
+   - mosquitto
+  tags: mqqt
 
 #- name: Vytvor adresar pro limits mariadb v systemd
 #  file: path=/etc/systemd/system/mariadb.service.d state=directory
 
-#- name: Uprava limits pro mariadb v systemd
-#  template: src=mariadb_systemd_limits.j2 dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=0644
-#  notify:
-#  - systemd reload
-#  tags: db
+- name: Mosquitto conf
+  template: src=mosquitto.conf.j2 dest=/etc/mosquitto/mosquitto.conf owner=root group=root mode=0644
+  notify:
+  - restart mosquitto
+  tags: mqqt
+
+- name: insert firewalld rule for mosquitto
+  firewalld: port=1883/tcp permanent=true state=enabled immediate=yes
+  tags:
+    - mqqt
+    - firewall
+
+- name: Start Mosquitto Service
+  service: name=mosquitto state=started enabled=yes
+  tags: mqqt
+  
