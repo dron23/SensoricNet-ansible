@@ -22,6 +22,7 @@
    - curl-devel
    - httpd24u-devel
    - httpd24u-mod_security2
+   - certbot
   tags: httpd
 
 

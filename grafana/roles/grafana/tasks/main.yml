@@ -1,2 +1,35 @@
 ---
 
+
+- name: Install epel
+  yum: name=epel-release state=installed
+  tags: grafana
+
+- name: Install yum utils
+  yum: name={{ item }} state=installed
+  with_items:
+   - yum-utils
+   - pygpgme
+  tags: grafana
+
+- name: repo grafana-stable.conf
+  template: src=grafana-stable.repo.j2 dest=/etc/yum.repos.d/grafana-stable.repo owner=root group=root mode=0644
+  tags: grafana
+
+- name: Install grafana
+  yum: name=grafana state=installed
+  tags: grafana
+
+- name: Prepare grafana.ini
+  template: src=grafana.ini.j2 dest=/etc/grafana/grafana.ini owner=root group=root mode=0644
+  tags: grafana
+
+- name: insert firewalld rule for grafana
+  firewalld: port=3000/tcp permanent=true state=enabled immediate=yes
+  tags:
+    - grafana
+    - firewall
+
+- name: Start grafana-server service
+  service: name=grafana-server state=started enabled=yes
+  tags: grafana

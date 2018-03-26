@@ -1,0 +1,24 @@
+---
+
+- name: nainstalujeme nejake python knihovny
+  yum: name={{ item }} state=present
+  with_items:
+   - python-pip
+   - python-paho-mqtt
+  tags: packages
+
+- name: install influxdb python library
+  pip: name=influxdb
+  tags: packages
+
+- name: vytvor git adresar pro roota
+  file: path=/root/git state=directory owner=root group=root mode=755
+  tags: packages
+
+- name: clone mqtt-to-influxdb-forwarder z githubu
+  git:
+    repo: https://github.com/mhaas/mqtt-to-influxdb-forwarder.git
+    dest: /root/git/mqtt-to-influxdb-forwarder
+  tags: packages
+
+

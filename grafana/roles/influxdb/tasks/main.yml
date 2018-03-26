@@ -1,0 +1,27 @@
+---
+
+- name: repo influxdb.repo
+  template: src=influxdb.repo.j2 dest=/etc/yum.repos.d/influxdb.repo owner=root group=root mode=0644
+  tags: influxdb
+
+- name: Install influxdb
+  yum: name=influxdb state=installed
+  tags: influxdb
+
+#- name: Prepare grafana.ini
+#  template: src=grafana.ini.j2 dest=/etc/grafana/grafana.ini owner=root group=root mode=0644
+#  tags: grafana
+
+# 8086
+# 8083
+
+#- name: insert firewalld rule for grafana
+#  firewalld: port=3000/tcp permanent=true state=enabled immediate=yes
+#  tags:
+#    - grafana
+#    - firewall
+
+- name: Start influxdb service
+  service: name=influxdb state=started enabled=yes
+  tags: influxdb
+

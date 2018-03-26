@@ -8,3 +8,5 @@
     - common
     - mqtt
     - grafana
+    - influxdb
+    - mqtt_forwarder

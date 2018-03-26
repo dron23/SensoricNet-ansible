@@ -156,5 +156,10 @@ IncludeOptional conf.d/*.conf
   SSLCertificateKeyFile   {{ ssl_certs_privkey_path }}
   SSLCertificateFile      {{ ssl_certs_cert_path }}
 
+#  SSLEngine on
+#  SSLCertificateChainFile /etc/letsencrypt/live/{{ ansible_nodename }}/chain.pem
+#  SSLCertificateKeyFile   /etc/letsencrypt/live/{{ ansible_nodename }}/privkey.pem
+#  SSLCertificateFile      /etc/letsencrypt/live/{{ ansible_nodename }}/cert.pem
+
 </VirtualHost>
 
