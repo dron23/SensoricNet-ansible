@@ -1,6 +1,6 @@
 ---
 # Handler to handle common notifications. Handlers are called by other plays.
 
-- name: restart mosquitto
-  service: name=mosquitto state=restarted
+- name: restart grafana-server
+  service: name=grafana-server state=restarted
 

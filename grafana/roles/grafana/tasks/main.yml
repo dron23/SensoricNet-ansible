@@ -33,3 +33,18 @@
 - name: Start grafana-server service
   service: name=grafana-server state=started enabled=yes
   tags: grafana
+
+- name: Install Piechart panel plugin
+  command: grafana-cli plugins install grafana-piechart-panel
+  notify:
+    - restart grafana-server
+  tags:
+    - grafana
+
+- name: Install Natel discrete panel plugin
+  command: grafana-cli plugins install natel-discrete-panel
+  notify:
+    - restart grafana-server
+  tags:
+    - grafana
+  
